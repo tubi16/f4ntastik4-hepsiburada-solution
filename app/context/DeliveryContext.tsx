@@ -5,12 +5,16 @@ import { MOCK_DELIVERIES, Delivery } from '../data/mock';
 export interface ExtendedDelivery extends Delivery {
     courierCode: string; // Code the courier gives to the customer (Customer enters this)
     customerCode: string; // Code the customer gives to the courier (Courier enters this)
+    photoDeliveryRequested?: boolean; // Courier requested photo delivery
+    photoDeliveryApproved?: boolean; // Customer approved photo delivery
 }
 
 interface DeliveryContextType {
     deliveries: ExtendedDelivery[];
     verifyDeliveryByCustomer: (id: string, inputCode: string) => boolean;
     verifyDeliveryByCourier: (id: string, inputCode: string) => boolean;
+    requestPhotoDelivery: (id: string) => void;
+    approvePhotoDelivery: (id: string) => void;
 }
 
 const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
@@ -22,6 +26,8 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
             ...d,
             courierCode: Math.floor(100000 + Math.random() * 900000).toString(), // Random 6 digits
             customerCode: Math.floor(100000 + Math.random() * 900000).toString(), // Random 6 digits
+            photoDeliveryRequested: false,
+            photoDeliveryApproved: false,
         }))
     );
 
@@ -43,8 +49,25 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
         return false;
     };
 
+    const requestPhotoDelivery = (id: string) => {
+        setDeliveries(prev => prev.map(d => d.id === id ? { ...d, photoDeliveryRequested: true } : d));
+    };
+
+    const approvePhotoDelivery = (id: string) => {
+        setDeliveries(prev => prev.map(d => d.id === id ? {
+            ...d,
+            photoDeliveryApproved: true
+        } : d));
+    };
+
     return (
-        <DeliveryContext.Provider value={{ deliveries, verifyDeliveryByCustomer, verifyDeliveryByCourier }}>
+        <DeliveryContext.Provider value={{
+            deliveries,
+            verifyDeliveryByCustomer,
+            verifyDeliveryByCourier,
+            requestPhotoDelivery,
+            approvePhotoDelivery
+        }}>
             {children}
         </DeliveryContext.Provider>
     );

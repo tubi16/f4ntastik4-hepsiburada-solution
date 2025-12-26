@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,12 +6,16 @@ import { useState, useRef } from 'react';
 import { useDelivery } from '../context/DeliveryContext';
 
 export default function CustomerHome() {
-    const { deliveries, verifyDeliveryByCustomer } = useDelivery();
+    const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery } = useDelivery();
     const myDelivery = deliveries[0]; // Simulator: User is associated with first delivery
 
     const [code, setCode] = useState(['', '', '', '', '', '']); // 6 digits
 
     const inputs = useRef<Array<TextInput | null>>([]);
+
+    if (!myDelivery) return null;
+
+    const { photoDeliveryRequested, photoDeliveryApproved } = myDelivery;
 
     const handleAlert = () => {
         const inputCode = code.join('');
@@ -26,6 +30,11 @@ export default function CustomerHome() {
         } else {
             Alert.alert("Eksik Kod", "Lütfen 6 haneli kodu giriniz.");
         }
+    };
+
+    const handleApprovePhoto = () => {
+        approvePhotoDelivery(myDelivery.id);
+        Alert.alert("Onaylandı", "Kuryeye fotoğraf yükleme izni verildi.");
     };
 
     const handleInput = (text: string, index: number) => {
@@ -46,23 +55,44 @@ export default function CustomerHome() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
+                <Pressable
+                    style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                     <Ionicons name="arrow-back" size={24} color={Colors.textMain} />
-                </TouchableOpacity>
+                </Pressable>
                 <Text style={styles.headerTitle}>Teslimat Onayı</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <View style={styles.content}>
+
+                {/* Approval Request Notification */}
+                {photoDeliveryRequested && !photoDeliveryApproved && (
+                    <View style={styles.approvalCard}>
+                        <View style={styles.approvalHeader}>
+                            <Ionicons name="notifications-circle" size={32} color={Colors.primary} />
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.approvalTitle}>Kurye İzin İstiyor</Text>
+                                <Text style={styles.approvalSub}>Kurye fotoğraflı teslimat yapmak istiyor.</Text>
+                            </View>
+                        </View>
+                        <Pressable
+                            style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.8 }]}
+                            onPress={handleApprovePhoto}
+                        >
+                            <Text style={styles.approveBtnText}>İzin Ver</Text>
+                            <Ionicons name="arrow-forward" size={16} color="white" />
+                        </Pressable>
+                    </View>
+                )}
+
                 <View style={styles.iconContainer}>
                     <View style={styles.iconCircle}>
                         <Ionicons name="shield-checkmark" size={40} color={Colors.primary} />
                     </View>
                     <Text style={styles.title}>Güvenli Teslimat</Text>
-                    <Text style={styles.description}>Sipariş #92837192 için karşılıklı doğrulama yapınız.</Text>
+                    <Text style={styles.description}>Sipariş #{myDelivery.id} için karşılıklı doğrulama yapınız.</Text>
                 </View>
 
                 <View style={styles.inputCard}>
@@ -98,17 +128,22 @@ export default function CustomerHome() {
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.helpRow}>
+                <Pressable
+                    style={({ pressed }) => [styles.helpRow, pressed && { opacity: 0.7 }]}
+                >
                     <Ionicons name="help-circle-outline" size={18} color={Colors.textSub} />
                     <Text style={styles.helpText}>Kod görünmüyor mu? Yardım al.</Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.confirmButton} onPress={handleAlert}>
+                <Pressable
+                    style={({ pressed }) => [styles.confirmButton, pressed && { opacity: 0.9 }]}
+                    onPress={handleAlert}
+                >
                     <Ionicons name="checkmark-circle" size={24} color="white" />
                     <Text style={styles.confirmButtonText}>Teslimatı Onayla</Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
         </SafeAreaView>
     );
@@ -146,5 +181,12 @@ const styles = StyleSheet.create({
 
     footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
     confirmButton: { backgroundColor: Colors.primary, height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, ...Shadows.medium },
-    confirmButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' }
+    confirmButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
+    approvalCard: { backgroundColor: '#fff5ec', padding: 16, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: Colors.primary },
+    approvalHeader: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 12 },
+    approvalTitle: { fontSize: 16, fontWeight: 'bold', color: Colors.textMain },
+    approvalSub: { fontSize: 12, color: Colors.textSub, flexShrink: 1 },
+    approveBtn: { backgroundColor: Colors.primary, flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start' },
+    approveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13 }
 });

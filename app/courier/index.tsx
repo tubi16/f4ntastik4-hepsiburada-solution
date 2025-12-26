@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 // import { MOCK_DELIVERIES, Delivery } from '../data/mock';
@@ -50,19 +50,19 @@ export default function CourierHome() {
             </View>
 
             <View style={styles.cardFooter}>
-                <TouchableOpacity
-                    style={styles.actionButtonPrimary}
+                <Pressable
+                    style={({ pressed }) => [styles.actionButtonPrimary, pressed && { opacity: 0.8 }]}
                     onPress={() => router.push(`/courier/delivery/${item.id}`)}
                 >
                     <Ionicons name="navigate" size={18} color="white" />
                     <Text style={styles.actionButtonText}>Teslimata Başla</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.7 }]}>
                     <Ionicons name="call-outline" size={20} color={Colors.textMain} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.7 }]}>
                     <Ionicons name="ellipsis-horizontal" size={20} color={Colors.textMain} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         </View>
     );
@@ -74,10 +74,10 @@ export default function CourierHome() {
                     <Ionicons name="cube-outline" size={28} color={Colors.brandPurple} />
                     <Text style={styles.headerTitle}>Kargolarım</Text>
                 </View>
-                <TouchableOpacity style={styles.notificationButton}>
+                <Pressable style={({ pressed }) => [styles.notificationButton, pressed && { opacity: 0.7 }]}>
                     <Ionicons name="notifications-outline" size={24} color={Colors.textMain} />
                     <View style={styles.notificationDot} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
             <View style={styles.statsContainer}>
@@ -112,12 +112,16 @@ export default function CourierHome() {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={[styles.tab, activeTab === item && styles.activeTab]}
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.tab,
+                                activeTab === item && styles.activeTab,
+                                pressed && { opacity: 0.8 }
+                            ]}
                             onPress={() => setActiveTab(item)}
                         >
                             <Text style={[styles.tabText, activeTab === item && styles.activeTabText]}>{item}</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                     keyExtractor={item => item}
                     contentContainerStyle={styles.tabsContent}
@@ -191,3 +195,4 @@ const styles = StyleSheet.create({
     actionButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
     iconButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center' },
 });
+

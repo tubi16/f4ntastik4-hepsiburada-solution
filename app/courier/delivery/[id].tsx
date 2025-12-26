@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDelivery } from '../../context/DeliveryContext';
@@ -12,7 +12,7 @@ import { analyzeDeliveryPhoto } from '../../services/GeminiService';
 export default function DeliveryDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const { deliveries, verifyDeliveryByCourier } = useDelivery();
+    const { deliveries, verifyDeliveryByCourier, requestPhotoDelivery } = useDelivery();
     const [method, setMethod] = useState<'code' | 'photo'>('code');
     const [inputCode, setInputCode] = useState('');
     const [photo, setPhoto] = useState<string | null>(null); // Keep photo for URI display
@@ -28,6 +28,8 @@ export default function DeliveryDetail() {
     if (!delivery) {
         return <View style={styles.center}><Text>Teslimat bulunamadı</Text></View>;
     }
+
+    const { photoDeliveryRequested, photoDeliveryApproved } = delivery;
 
     const handleInput = (text: string, index: number) => {
         // Allow only numeric input
@@ -47,6 +49,11 @@ export default function DeliveryDetail() {
     };
 
     const pickImage = async () => {
+        if (!photoDeliveryApproved) {
+            Alert.alert("Onay Bekleniyor", "Fotoğraf çekebilmek için müşterinin onayı gereklidir.");
+            return;
+        }
+
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert('İzin Gerekli', 'Fotoğraf çekmek için kamera izni gerekiyor.');
@@ -70,6 +77,11 @@ export default function DeliveryDetail() {
         }
     };
 
+    const handleRequestApproval = () => {
+        requestPhotoDelivery(delivery.id);
+        Alert.alert("Onay Gönderildi", "Müşteriye fotoğraf ile teslimat onayı gönderildi. Lütfen müşterinin onaylamasını bekleyiniz.");
+    };
+
     const handleDeliver = async () => {
         if (method === 'code') {
             const inputCode = code.join('');
@@ -84,6 +96,11 @@ export default function DeliveryDetail() {
                 Alert.alert("Hata", "Kod hatalı. Lütfen müşterinin kodunu kontrol ediniz.");
             }
         } else {
+            if (!photoDeliveryApproved) {
+                Alert.alert("Onay Gerekli", "Lütfen önce müşteriden onay alınız.");
+                return;
+            }
+
             if (!photo) {
                 Alert.alert("Eksik", "Lütfen teslimat fotoğrafını çekiniz.");
                 return;
@@ -123,13 +140,13 @@ export default function DeliveryDetail() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
+                <Pressable
+                    style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
                     onPress={() => router.back()}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                     <Ionicons name="arrow-back" size={24} color={Colors.textMain} />
-                </TouchableOpacity>
+                </Pressable>
                 <Text style={styles.headerTitle}>Teslimat Onayı</Text>
                 <View style={{ width: 40 }} />
             </View>
@@ -154,20 +171,28 @@ export default function DeliveryDetail() {
 
                 <Text style={styles.sectionTitle}>Teslimat Yöntemi</Text>
                 <View style={styles.toggleContainer}>
-                    <TouchableOpacity
-                        style={[styles.toggleBtn, method === 'code' && styles.toggleBtnActive]}
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.toggleBtn,
+                            method === 'code' && styles.toggleBtnActive,
+                            pressed && { opacity: 0.8 }
+                        ]}
                         onPress={() => setMethod('code')}
                     >
                         <Ionicons name="keypad-outline" size={18} color={method === 'code' ? Colors.primary : Colors.textSub} />
                         <Text style={[styles.toggleText, method === 'code' && styles.toggleTextActive]}>Kod ile</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.toggleBtn, method === 'photo' && styles.toggleBtnActive]}
+                    </Pressable>
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.toggleBtn,
+                            method === 'photo' && styles.toggleBtnActive,
+                            pressed && { opacity: 0.8 }
+                        ]}
                         onPress={() => setMethod('photo')}
                     >
                         <Ionicons name="camera-outline" size={18} color={method === 'photo' ? Colors.primary : Colors.textSub} />
                         <Text style={[styles.toggleText, method === 'photo' && styles.toggleTextActive]}>Fotoğraf ile</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 {method === 'code' ? (
@@ -198,21 +223,39 @@ export default function DeliveryDetail() {
                     </View>
                 ) : (
                     <View style={styles.photoSection}>
-                        {photo ? (
+                        {!photoDeliveryApproved ? (
+                            <Pressable
+                                style={({ pressed }) => [styles.requestButton, pressed && { opacity: 0.8 }]}
+                                onPress={handleRequestApproval}
+                                disabled={photoDeliveryRequested}
+                            >
+                                <View style={styles.uploadIconCircle}>
+                                    <Ionicons name={photoDeliveryRequested ? "time-outline" : "notifications-outline"} size={32} color={Colors.primary} />
+                                </View>
+                                <Text style={styles.uploadTitle}>
+                                    {photoDeliveryRequested ? "Onay Bekleniyor..." : "Müşteri Onayı İste"}
+                                </Text>
+                                <Text style={styles.uploadSub}>
+                                    {photoDeliveryRequested
+                                        ? "Müşterinin testi onayı bekleniyor."
+                                        : "Fotoğraf yüklemek için müşteriden onay almalısınız."}
+                                </Text>
+                            </Pressable>
+                        ) : photo ? (
                             <View style={styles.previewContainer}>
                                 <Image source={{ uri: photo }} style={styles.previewImage} />
-                                <TouchableOpacity style={styles.retakeButton} onPress={() => setPhoto(null)}>
+                                <Pressable style={({ pressed }) => [styles.retakeButton, pressed && { opacity: 0.8 }]} onPress={() => setPhoto(null)}>
                                     <Ionicons name="close-circle" size={24} color="white" />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
                         ) : (
-                            <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
+                            <Pressable style={({ pressed }) => [styles.uploadBox, pressed && { opacity: 0.8 }]} onPress={pickImage}>
                                 <View style={styles.uploadIconCircle}>
                                     <Ionicons name="camera" size={32} color={Colors.primary} />
                                 </View>
                                 <Text style={styles.uploadTitle}>Fotoğraf Çek</Text>
                                 <Text style={styles.uploadSub}>Teslimat kanıtı olarak paket fotoğrafını çekiniz.</Text>
-                            </TouchableOpacity>
+                            </Pressable>
                         )}
                     </View>
                 )}
@@ -231,13 +274,14 @@ export default function DeliveryDetail() {
             </View>
 
             <View style={styles.footer}>
-                <TouchableOpacity
-                    style={[
+                <Pressable
+                    style={({ pressed }) => [
                         styles.confirmButton,
-                        (method === 'photo' && !photo) || isAnalyzing ? styles.disabledButton : null
+                        ((method === 'photo' && (!photo || !photoDeliveryApproved)) || isAnalyzing) ? styles.disabledButton : null,
+                        pressed && { opacity: 0.9 }
                     ]}
                     onPress={handleDeliver}
-                    disabled={(method === 'photo' && !photo) || isAnalyzing}
+                    disabled={(method === 'photo' && (!photo || !photoDeliveryApproved)) || isAnalyzing}
                 >
                     {isAnalyzing ? (
                         <ActivityIndicator color="white" />
@@ -247,7 +291,7 @@ export default function DeliveryDetail() {
                     <Text style={styles.confirmButtonText}>
                         {isAnalyzing ? "Analiz Ediliyor..." : "Teslimatı Onayla"}
                     </Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
         </SafeAreaView>
     );
@@ -289,9 +333,10 @@ const styles = StyleSheet.create({
 
     photoSection: { height: 200, marginBottom: 20 },
     uploadBox: { flex: 1, backgroundColor: '#fafafa', borderWidth: 2, borderColor: '#eee', borderStyle: 'dashed', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    requestButton: { flex: 1, backgroundColor: '#fff5ec', borderWidth: 2, borderColor: Colors.primary, borderStyle: 'solid', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
     uploadIconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255, 96, 0, 0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
     uploadTitle: { fontSize: 16, fontWeight: 'bold', color: Colors.textMain, marginBottom: 4 },
-    uploadSub: { fontSize: 12, color: Colors.textSub },
+    uploadSub: { fontSize: 12, color: Colors.textSub, textAlign: 'center', paddingHorizontal: 20 },
 
     previewContainer: { flex: 1, borderRadius: 16, overflow: 'hidden', position: 'relative' },
     previewImage: { width: '100%', height: '100%' },
