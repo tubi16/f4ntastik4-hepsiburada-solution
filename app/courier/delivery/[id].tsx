@@ -246,7 +246,20 @@ export default function DeliveryDetail() {
                                 : "Siz kodu girdiniz. Şimdi müşterinin de kendi ekranından sizin kodunuzu girmesi bekleniyor."}
                         </Text>
                         {!isCompleted && (
-                            <ActivityIndicator style={{ marginTop: 20 }} color="#d97706" />
+                            <>
+                                <ActivityIndicator style={{ marginTop: 20 }} color="#d97706" />
+                                <View style={{ marginTop: 20 }}>
+                                    <View style={styles.yourCodeContainer}>
+                                        <View>
+                                            <Text style={styles.yourCodeLabel}>SİZİN KODUNUZ</Text>
+                                            <Text style={styles.yourCodeSub}>Müşteriye söyleyin</Text>
+                                        </View>
+                                        <View style={styles.yourCodeBadge}>
+                                            <Text style={styles.yourCodeValue}>{delivery.courierCode}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            </>
                         )}
                     </View>
                 )}
