@@ -192,12 +192,12 @@ export default function DeliveryDetail() {
                                             value={digit}
                                             onChangeText={(text) => handleInput(text, index)}
                                             textAlign="center"
+                                            placeholderTextColor="#ccc"
                                         />
                                     ))}
                                 </View>
                             </View>
                         ) : (
-                            // Photo Section (Simplified for brevity, keep existing logic logic mostly)
                             <View style={styles.photoSection}>
                                 {!photoDeliveryApproved ? (
                                     <Pressable style={styles.requestButton} onPress={handleRequestApproval} disabled={photoDeliveryRequested}>
@@ -230,14 +230,24 @@ export default function DeliveryDetail() {
                         </Pressable>
                     </>
                 ) : (
-                    <View style={styles.successMessage}>
-                        <Ionicons name="checkmark-circle-outline" size={64} color={Colors.primary} />
-                        <Text style={styles.successTitle}>Sizin İşleminiz Tamam!</Text>
-                        <Text style={styles.successSub}>
-                            {isCustomerVerified
-                                ? "Müşteri de onayladı. Teslimat başarıyla kapandı."
-                                : "Müşterinin de kendi ekranından sizin kodunuzu girmesi bekleniyor."}
+                    // VERIFIED STATE: Either Waiting or Completed
+                    <View style={isCompleted ? styles.successMessage : styles.waitingMessage}>
+                        <Ionicons
+                            name={isCompleted ? "checkmark-circle" : "hourglass"}
+                            size={64}
+                            color={isCompleted ? "#4CAF50" : "#d97706"}
+                        />
+                        <Text style={[styles.successTitle, !isCompleted && { color: '#d97706' }]}>
+                            {isCompleted ? "Teslimat Tamamlandı!" : "Müşteri Bekleniyor"}
                         </Text>
+                        <Text style={styles.successSub}>
+                            {isCompleted
+                                ? "Sipariş başarıyla teslim edildi ve kapatıldı."
+                                : "Siz kodu girdiniz. Şimdi müşterinin de kendi ekranından sizin kodunuzu girmesi bekleniyor."}
+                        </Text>
+                        {!isCompleted && (
+                            <ActivityIndicator style={{ marginTop: 20 }} color="#d97706" />
+                        )}
                     </View>
                 )}
             </View>
@@ -294,6 +304,7 @@ const styles = StyleSheet.create({
     confirmButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 
     successMessage: { alignItems: 'center', padding: 40, gap: 16 },
-    successTitle: { fontSize: 20, fontWeight: 'bold', color: Colors.textMain },
-    successSub: { textAlign: 'center', color: '#666' }
+    waitingMessage: { alignItems: 'center', padding: 40, gap: 16, backgroundColor: '#fff7ed', borderRadius: 16, borderWidth: 1, borderColor: '#fdba74' },
+    successTitle: { fontSize: 20, fontWeight: 'bold', color: Colors.textMain, textAlign: 'center' },
+    successSub: { textAlign: 'center', color: '#666', lineHeight: 20 }
 });
