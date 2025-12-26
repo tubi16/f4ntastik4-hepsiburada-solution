@@ -7,7 +7,8 @@ import { useDelivery } from '../context/DeliveryContext';
 
 export default function CustomerHome() {
     const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery } = useDelivery();
-    const myDelivery = deliveries[0]; // Simulator: User is associated with first delivery
+    // Select the first pending delivery to match the "top of the list" for the courier
+    const myDelivery = deliveries.find(d => d.status === 'pending') || deliveries[0];
 
     const [code, setCode] = useState(['', '', '', '', '', '']); // 6 digits
 

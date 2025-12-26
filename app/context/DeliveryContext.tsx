@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { MOCK_DELIVERIES, Delivery } from '../data/mock';
 import { db } from '../config/firebase';
-import { collection, onSnapshot, doc, updateDoc, writeBatch, getDocs, query } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, writeBatch, getDocs, query, orderBy } from 'firebase/firestore';
 
 // Extended Delivery type with verification codes
 export interface ExtendedDelivery extends Delivery {
@@ -27,7 +27,7 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to Firestore updates
     useEffect(() => {
-        const q = collection(db, 'deliveries');
+        const q = query(collection(db, 'deliveries'), orderBy('customerName', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({
                 id: doc.id,
