@@ -9,6 +9,8 @@ export interface ExtendedDelivery extends Delivery {
     customerCode: string;
     photoDeliveryRequested?: boolean;
     photoDeliveryApproved?: boolean;
+    isCourierVerified?: boolean;
+    isCustomerVerified?: boolean;
 }
 
 interface DeliveryContextType {
@@ -55,23 +57,23 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
         const batch = writeBatch(db);
 
         // Use MOCK_DELIVERIES as base, but generate fresh random data for 10-15 items
-        // We'll just loop mock data to create more items
         const seedData = Array.from({ length: 15 }).map((_, i) => {
             const mockTemplate = MOCK_DELIVERIES[i % MOCK_DELIVERIES.length];
-            // Ensure unique ID for Firestore
             const docRef = doc(collection(db, 'deliveries'));
 
             return {
                 ref: docRef,
                 data: {
                     ...mockTemplate,
-                    id: docRef.id, // Use firestore auto-id or maintain separate ID field
-                    customerName: `${mockTemplate.customerName} ${i + 1}`, // Variate name
+                    id: docRef.id,
+                    customerName: `${mockTemplate.customerName} ${i + 1}`,
                     courierCode: Math.floor(100000 + Math.random() * 900000).toString(),
                     customerCode: Math.floor(100000 + Math.random() * 900000).toString(),
                     photoDeliveryRequested: false,
                     photoDeliveryApproved: false,
-                    status: 'pending' // Reset status
+                    isCourierVerified: false,
+                    isCustomerVerified: false,
+                    status: 'pending'
                 }
             };
         });
@@ -87,7 +89,11 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
     const verifyDeliveryByCustomer = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
         if (delivery && delivery.courierCode === inputCode) {
-            await updateDoc(doc(db, 'deliveries', id), { status: 'delivered' });
+            const updates: any = { isCustomerVerified: true };
+            if (delivery.isCourierVerified) {
+                updates.status = 'delivered';
+            }
+            await updateDoc(doc(db, 'deliveries', id), updates);
             return true;
         }
         return false;
@@ -96,7 +102,11 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
     const verifyDeliveryByCourier = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
         if (delivery && delivery.customerCode === inputCode) {
-            await updateDoc(doc(db, 'deliveries', id), { status: 'delivered' });
+            const updates: any = { isCourierVerified: true };
+            if (delivery.isCustomerVerified) {
+                updates.status = 'delivered';
+            }
+            await updateDoc(doc(db, 'deliveries', id), updates);
             return true;
         }
         return false;

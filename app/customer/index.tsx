@@ -2,33 +2,50 @@ import { View, Text, StyleSheet, Pressable, TextInput, Alert, ScrollView } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDelivery } from '../context/DeliveryContext';
 
 export default function CustomerHome() {
     const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery } = useDelivery();
-    // Select the first pending delivery to match the "top of the list" for the courier
-    const myDelivery = deliveries.find(d => d.status === 'pending') || deliveries[0];
 
+    // State to lock focus on the current delivery actively being handled
+    const [currentId, setCurrentId] = useState<string | null>(null);
+
+    // Effect to auto-select the first pending delivery if we don't have one selected
+    useEffect(() => {
+        if (!currentId) {
+            const nextPending = deliveries.find(d => d.status === 'pending');
+            if (nextPending) {
+                setCurrentId(nextPending.id);
+            }
+        }
+    }, [deliveries, currentId]);
+
+    const myDelivery = currentId ? deliveries.find(d => d.id === currentId) : null;
     const [code, setCode] = useState(['', '', '', '', '', '']); // 6 digits
-
     const inputs = useRef<Array<TextInput | null>>([]);
 
-    if (!myDelivery) return <View style={styles.center}><Text>Aktif teslimat bulunamadı.</Text></View>;
+    if (!myDelivery) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.center}>
+                    <Ionicons name="cube-outline" size={64} color={Colors.textSub} />
+                    <Text style={{ marginTop: 16, color: Colors.textSub }}>Aktif teslimat bulunamadı.</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     const { photoDeliveryRequested, photoDeliveryApproved, isCourierVerified, isCustomerVerified, status } = myDelivery;
+    const isWaitingForCourier = isCustomerVerified && !isCourierVerified;
+    const isCompleted = status === 'delivered';
 
     const handleAlert = async () => {
         const inputCode = code.join('');
         if (inputCode.length === 6) {
             const success = await verifyDeliveryByCustomer(myDelivery.id, inputCode);
             if (success) {
-                if (isCourierVerified) {
-                    Alert.alert("Başarılı", "Teslimat başarıyla tamamlandı! 🎉");
-                } else {
-                    Alert.alert("Kod Onaylandı", "Kuryenin de sizin kodunuzu girmesi bekleniyor.");
-                }
-                setCode(['', '', '', '', '', '']);
+                // Success handled by UI reactivity
             } else {
                 Alert.alert("Hata", "Girdiğiniz kod hatalı. Lütfen kuryeden aldığınız kodu kontrol ediniz.");
             }
@@ -40,6 +57,11 @@ export default function CustomerHome() {
     const handleApprovePhoto = () => {
         approvePhotoDelivery(myDelivery.id);
         Alert.alert("Onaylandı", "Kuryeye fotoğraf yükleme izni verildi.");
+    };
+
+    const handleNext = () => {
+        setCurrentId(null);
+        setCode(['', '', '', '', '', '']);
     };
 
     const handleInput = (text: string, index: number) => {
@@ -56,9 +78,6 @@ export default function CustomerHome() {
             inputs.current[index - 1]?.focus();
         }
     };
-
-    const isWaitingForCourier = isCustomerVerified && !isCourierVerified;
-    const isCompleted = status === 'delivered';
 
     return (
         <SafeAreaView style={styles.container}>
@@ -78,9 +97,14 @@ export default function CustomerHome() {
                 {/* Status Card Logic */}
                 {isCompleted ? (
                     <View style={styles.statusCardSuccess}>
-                        <Ionicons name="checkmark-circle" size={64} color="white" />
-                        <Text style={styles.statusTitle}>Teslimat Tamamlandı</Text>
-                        <Text style={styles.statusSub}>İşbirliğiniz için teşekkür ederiz.</Text>
+                        <Ionicons name="checkmark-circle" size={80} color="white" />
+                        <Text style={styles.statusTitle}>Teslimat Tamamlandı!</Text>
+                        <Text style={styles.statusSub}>Sipariş #{myDelivery.id} başarıyla teslim edildi.</Text>
+
+                        <Pressable style={styles.nextButton} onPress={handleNext}>
+                            <Text style={styles.nextButtonText}>Sıradaki Kargo</Text>
+                            <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+                        </Pressable>
                     </View>
                 ) : isWaitingForCourier ? (
                     <View style={styles.statusCardWait}>
@@ -146,6 +170,7 @@ export default function CustomerHome() {
                     </>
                 )}
 
+                {/* Show YOUR code logic if NOT completed */}
                 {!isCompleted && (
                     <View style={styles.yourCodeCard}>
                         <View style={styles.pattern} />
@@ -218,5 +243,8 @@ const styles = StyleSheet.create({
     statusCardSuccess: { backgroundColor: '#4CAF50', padding: 32, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
     statusCardWait: { backgroundColor: '#fff7ed', padding: 32, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 2, borderColor: '#fdba74', borderStyle: 'dashed' },
     statusTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', marginTop: 16, textAlign: 'center' },
-    statusSub: { color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 8 }
+    statusSub: { color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 8 },
+
+    nextButton: { marginTop: 24, backgroundColor: 'white', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 30, flexDirection: 'row', alignItems: 'center', gap: 8 },
+    nextButtonText: { color: Colors.primary, fontWeight: 'bold', fontSize: 16 }
 });
