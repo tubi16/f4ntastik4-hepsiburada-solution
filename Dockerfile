@@ -32,4 +32,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 
 # Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx with Runtime Environment Variable Replacement
+# We search for the placeholder and replace it with the actual ENV var value provided by Cloud Run
+CMD ["/bin/sh", "-c", "grep -rl 'GEMINI_API_KEY_PLACEHOLDER' /usr/share/nginx/html | xargs sed -i \"s|GEMINI_API_KEY_PLACEHOLDER|${EXPO_PUBLIC_GEMINI_API_KEY}|g\" && nginx -g 'daemon off;'"]

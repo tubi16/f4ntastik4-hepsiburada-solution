@@ -1,7 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Access API Key from environment variables (Expo public env)
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
+// Access API Key from environment variables (Expo public env)
+// If EXPO_PUBLIC_GEMINI_API_KEY is missing at build time (common in Docker without args),
+// we fall back to a specific placeholder that we will replace at runtime via entrypoint.
+const ENV_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const API_KEY = (ENV_KEY && ENV_KEY.length > 0) ? ENV_KEY : "GEMINI_API_KEY_PLACEHOLDER";
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
