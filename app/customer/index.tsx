@@ -8,7 +8,7 @@ import { useDelivery } from '../context/DeliveryContext';
 
 export default function CustomerHome() {
     const router = useRouter();
-    const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery } = useDelivery();
+    const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery, cancelPhotoDelivery } = useDelivery();
 
     // State to lock focus on the current delivery actively being handled
     const [currentId, setCurrentId] = useState<string | null>(null);
@@ -159,6 +159,50 @@ export default function CustomerHome() {
                             <Text style={styles.description}>Sipariş #{myDelivery.id} için kuryenin size verdiği kodu giriniz.</Text>
                         </View>
 
+                        {/* Customer Photo Preference */}
+                        <View style={styles.preferenceCard}>
+                            <View style={styles.prefHeader}>
+                                <Ionicons name="camera" size={24} color={photoDeliveryApproved ? Colors.success : Colors.textSub} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.prefTitle}>Fotoğraflı Teslimat</Text>
+                                    <Text style={styles.prefSub}>
+                                        {photoDeliveryApproved
+                                            ? "Kuryeye fotoğraflı teslimat izni verdiniz."
+                                            : "Temassız teslimat için fotoğraflı onay verebilirsiniz."}
+                                    </Text>
+                                </View>
+                            </View>
+                            {!photoDeliveryApproved ? (
+                                <Pressable
+                                    style={({ pressed }) => [styles.prefButton, pressed && { opacity: 0.8 }]}
+                                    onPress={() => {
+                                        approvePhotoDelivery(myDelivery.id);
+                                        if (Platform.OS === 'web') {
+                                            window.alert("Kuryeye Bilgi Verildi\nFotoğraflı teslimat tercihiniz iletildi.");
+                                        } else {
+                                            Alert.alert("Kuryeye Bilgi Verildi", "Fotoğraflı teslimat tercihiniz iletildi.");
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.prefButtonText}>Fotoğrafla Teslimat İste</Text>
+                                </Pressable>
+                            ) : (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={styles.prefActiveBadge}>
+                                        <Ionicons name="checkmark-circle" size={16} color="white" />
+                                        <Text style={styles.prefActiveText}>Tercih Edildi</Text>
+                                    </View>
+                                    <Pressable
+                                        hitSlop={10}
+                                        onPress={() => cancelPhotoDelivery(myDelivery.id)}
+                                        style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+                                    >
+                                        <Text style={{ color: Colors.textSub, fontSize: 13, textDecorationLine: 'underline' }}>Vazgeç</Text>
+                                    </Pressable>
+                                </View>
+                            )}
+                        </View>
+
                         <View style={styles.inputCard}>
                             <Text style={styles.cardTitle}>Kurye Kodunu Girin</Text>
                             <Text style={styles.cardSub}>Kuryeden aldığınız 6 haneli doğrulama kodunu giriniz.</Text>
@@ -227,6 +271,15 @@ const styles = StyleSheet.create({
     iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255, 96, 0, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
     title: { fontSize: 22, fontWeight: 'bold', color: Colors.textMain, marginBottom: 8 },
     description: { textAlign: 'center', color: Colors.textSub, lineHeight: 20, maxWidth: 280 },
+
+    preferenceCard: { backgroundColor: 'white', padding: 16, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: '#eee', ...Shadows.small },
+    prefHeader: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 12 },
+    prefTitle: { fontSize: 15, fontWeight: 'bold', color: Colors.textMain },
+    prefSub: { fontSize: 12, color: Colors.textSub, flexShrink: 1 },
+    prefButton: { backgroundColor: Colors.surfaceLight, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: Colors.primary, borderStyle: 'dashed' },
+    prefButtonText: { color: Colors.primary, fontWeight: 'bold', fontSize: 13 },
+    prefActiveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.success, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, alignSelf: 'flex-start' },
+    prefActiveText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
 
     inputCard: { backgroundColor: '#f8f8f8', borderRadius: 16, padding: 24, marginBottom: 24 },
     cardTitle: { fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },

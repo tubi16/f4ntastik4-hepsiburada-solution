@@ -11,7 +11,7 @@ import { analyzeDeliveryPhoto } from '../../services/GeminiService';
 export default function DeliveryDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const { deliveries, verifyDeliveryByCourier, requestPhotoDelivery } = useDelivery();
+    const { deliveries, verifyDeliveryByCourier, requestPhotoDelivery, verifyDeliveryByPhoto } = useDelivery();
     const [method, setMethod] = useState<'code' | 'photo'>('code');
     const [photo, setPhoto] = useState<string | null>(null);
     const [photoBase64, setPhotoBase64] = useState<string | null>(null);
@@ -90,13 +90,8 @@ export default function DeliveryDetail() {
             }
 
             try {
-                // Call verification
-                console.log("Calling calling verifyDeliveryByCourier...");
                 const success = await verifyDeliveryByCourier(delivery.id, inputCode);
-                console.log("Verification result:", success);
-
                 if (success) {
-                    // Check if FULLY delivered or just partial
                     if (isCustomerVerified) {
                         if (Platform.OS === 'web') {
                             window.alert("Teslimat Tamamlandı! 🚀\nSipariş başarıyla teslim edildi.");
@@ -112,7 +107,6 @@ export default function DeliveryDetail() {
                         }
                     }
                 } else {
-                    console.log("Showing failure alert");
                     if (Platform.OS === 'web') {
                         window.alert("Hata\nKod hatalı. Lütfen müşterinin kodunu kontrol ediniz.");
                     } else {
@@ -128,13 +122,49 @@ export default function DeliveryDetail() {
                 }
             }
         } else {
-            // Photo flow remains similar for now
-            if (Platform.OS === 'web') {
-                window.alert("Bilgi\nFotoğraf doğrulandı. Lütfen şimdi kod doğrulamasını yapınız.");
-            } else {
-                Alert.alert("Bilgi", "Fotoğraf doğrulandı. Lütfen şimdi kod doğrulamasını yapınız.");
+            // Photo Flow
+            if (!photoBase64) {
+                if (Platform.OS === 'web') {
+                    window.alert("Hata\nLütfen önce bir fotoğraf çekiniz.");
+                } else {
+                    Alert.alert("Hata", "Lütfen önce bir fotoğraf çekiniz.");
+                }
+                return;
             }
-            setMethod('code');
+
+            setIsAnalyzing(true);
+            try {
+                // 1. Analyze with Gemini
+                const analysis = await analyzeDeliveryPhoto(photoBase64);
+                console.log("Gemini Analysis Result:", analysis);
+
+                if (analysis.valid) {
+                    // 2. Verify Delivery directly
+                    await verifyDeliveryByPhoto(delivery.id);
+
+                    if (Platform.OS === 'web') {
+                        window.alert("Teslimat Başarılı! 📸\nYapay zeka fotoğrafı onayladı. Teslimat tamamlandı.");
+                    } else {
+                        Alert.alert("Teslimat Başarılı! 📸", "Yapay zeka fotoğrafı onayladı. Teslimat tamamlandı.");
+                    }
+                    router.back();
+                } else {
+                    if (Platform.OS === 'web') {
+                        window.alert(`Hata\nFotoğraf onaylanmadı: ${analysis.reason}`);
+                    } else {
+                        Alert.alert("Fotoğraf Onaylanmadı", analysis.reason);
+                    }
+                }
+            } catch (error) {
+                console.error("Photo Analysis Error", error);
+                if (Platform.OS === 'web') {
+                    window.alert("Hata\nFotoğraf analizi sırasında bir hata oluştu.");
+                } else {
+                    Alert.alert("Hata", "Fotoğraf analizi sırasında bir hata oluştu.");
+                }
+            } finally {
+                setIsAnalyzing(false);
+            }
         }
     };
 
@@ -183,9 +213,15 @@ export default function DeliveryDetail() {
                     )}
                 </View>
 
-                {/* Input Section - Hide if verified */}
+                {/* Verification Method Section */}
                 {!isCourierVerified ? (
                     <>
+                        {photoDeliveryApproved && (
+                            <View style={styles.customerPreApprovedBanner}>
+                                <Ionicons name="camera-outline" size={20} color="#155724" />
+                                <Text style={styles.customerPreApprovedText}>Müşteri fotoğraflı teslimat istedi.</Text>
+                            </View>
+                        )}
                         <Text style={styles.sectionTitle}>Doğrulama Yöntemi</Text>
                         <View style={styles.toggleContainer}>
                             <Pressable
@@ -249,10 +285,15 @@ export default function DeliveryDetail() {
                         </View>
 
                         <Pressable
-                            style={({ pressed }) => [styles.confirmButton, pressed && { opacity: 0.9 }]}
+                            style={({ pressed }) => [styles.confirmButton, pressed && { opacity: 0.9 }, isAnalyzing && { opacity: 0.7 }]}
                             onPress={handleDeliver}
+                            disabled={isAnalyzing}
                         >
-                            <Text style={styles.confirmButtonText}>Onayla ve Gönder</Text>
+                            {isAnalyzing ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text style={styles.confirmButtonText}>Onayla ve Gönder</Text>
+                            )}
                         </Pressable>
                     </>
                 ) : (
@@ -314,6 +355,9 @@ const styles = StyleSheet.create({
 
     waitBanner: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#eee', flexDirection: 'row', alignItems: 'center', gap: 8 },
     waitText: { fontSize: 12, color: '#d97706', fontStyle: 'italic' },
+
+    customerPreApprovedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#d4edda', padding: 12, borderRadius: 8, marginBottom: 16, borderWidth: 1, borderColor: '#c3e6cb' },
+    customerPreApprovedText: { color: '#155724', fontSize: 13, fontWeight: 'bold' },
 
     sectionTitle: { fontWeight: '600', marginBottom: 10 },
     toggleContainer: { flexDirection: 'row', backgroundColor: '#f5f5f5', padding: 4, borderRadius: 10, marginBottom: 20 },

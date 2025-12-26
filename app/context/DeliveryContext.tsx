@@ -19,6 +19,8 @@ interface DeliveryContextType {
     verifyDeliveryByCourier: (id: string, inputCode: string) => Promise<boolean>;
     requestPhotoDelivery: (id: string) => Promise<void>;
     approvePhotoDelivery: (id: string) => Promise<void>;
+    cancelPhotoDelivery: (id: string) => Promise<void>;
+    verifyDeliveryByPhoto: (id: string) => Promise<void>;
     seedDatabase: () => Promise<void>;
 }
 
@@ -130,6 +132,19 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
         await updateDoc(doc(db, 'deliveries', id), { photoDeliveryApproved: true });
     };
 
+    const cancelPhotoDelivery = async (id: string) => {
+        await updateDoc(doc(db, 'deliveries', id), { photoDeliveryApproved: false });
+    };
+
+    const verifyDeliveryByPhoto = async (id: string): Promise<void> => {
+        // Photo verification bypasses the code handshake and marks as delivered
+        await updateDoc(doc(db, 'deliveries', id), {
+            isCourierVerified: true,
+            isCustomerVerified: true,
+            status: 'delivered'
+        });
+    };
+
     return (
         <DeliveryContext.Provider value={{
             deliveries,
@@ -137,6 +152,8 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
             verifyDeliveryByCourier,
             requestPhotoDelivery,
             approvePhotoDelivery,
+            cancelPhotoDelivery,
+            verifyDeliveryByPhoto,
             seedDatabase
         }}>
             {children}
