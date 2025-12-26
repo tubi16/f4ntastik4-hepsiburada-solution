@@ -17,10 +17,10 @@ export default function CustomerHome() {
 
     const { photoDeliveryRequested, photoDeliveryApproved } = myDelivery;
 
-    const handleAlert = () => {
+    const handleAlert = async () => {
         const inputCode = code.join('');
         if (inputCode.length === 6) {
-            const success = verifyDeliveryByCustomer(myDelivery.id, inputCode);
+            const success = await verifyDeliveryByCustomer(myDelivery.id, inputCode);
             if (success) {
                 Alert.alert("Başarılı", "Teslimat başarıyla onaylandı! 🎉");
                 setCode(['', '', '', '', '', '']);

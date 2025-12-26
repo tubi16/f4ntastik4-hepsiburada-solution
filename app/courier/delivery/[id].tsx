@@ -89,7 +89,7 @@ export default function DeliveryDetail() {
                 Alert.alert("Hata", "Lütfen 6 haneli müşteri kodunu giriniz.");
                 return;
             }
-            const success = verifyDeliveryByCourier(delivery.id, inputCode);
+            const success = await verifyDeliveryByCourier(delivery.id, inputCode);
             if (success) {
                 Alert.alert("Başarılı", "Teslimat tamamlandı. 🚀", [{ text: "Tamam", onPress: () => router.back() }]);
             } else {

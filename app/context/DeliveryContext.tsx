@@ -1,63 +1,113 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { MOCK_DELIVERIES, Delivery } from '../data/mock';
+import { db } from '../config/firebase';
+import { collection, onSnapshot, doc, updateDoc, writeBatch, getDocs, query } from 'firebase/firestore';
 
 // Extended Delivery type with verification codes
 export interface ExtendedDelivery extends Delivery {
-    courierCode: string; // Code the courier gives to the customer (Customer enters this)
-    customerCode: string; // Code the customer gives to the courier (Courier enters this)
-    photoDeliveryRequested?: boolean; // Courier requested photo delivery
-    photoDeliveryApproved?: boolean; // Customer approved photo delivery
+    courierCode: string;
+    customerCode: string;
+    photoDeliveryRequested?: boolean;
+    photoDeliveryApproved?: boolean;
 }
 
 interface DeliveryContextType {
     deliveries: ExtendedDelivery[];
-    verifyDeliveryByCustomer: (id: string, inputCode: string) => boolean;
-    verifyDeliveryByCourier: (id: string, inputCode: string) => boolean;
-    requestPhotoDelivery: (id: string) => void;
-    approvePhotoDelivery: (id: string) => void;
+    verifyDeliveryByCustomer: (id: string, inputCode: string) => Promise<boolean>;
+    verifyDeliveryByCourier: (id: string, inputCode: string) => Promise<boolean>;
+    requestPhotoDelivery: (id: string) => Promise<void>;
+    approvePhotoDelivery: (id: string) => Promise<void>;
+    seedDatabase: () => Promise<void>;
 }
 
 const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
 
 export function DeliveryProvider({ children }: { children: ReactNode }) {
-    // Initialize with mock data and random codes
-    const [deliveries, setDeliveries] = useState<ExtendedDelivery[]>(() =>
-        MOCK_DELIVERIES.map(d => ({
-            ...d,
-            courierCode: Math.floor(100000 + Math.random() * 900000).toString(), // Random 6 digits
-            customerCode: Math.floor(100000 + Math.random() * 900000).toString(), // Random 6 digits
-            photoDeliveryRequested: false,
-            photoDeliveryApproved: false,
-        }))
-    );
+    const [deliveries, setDeliveries] = useState<ExtendedDelivery[]>([]);
 
-    const verifyDeliveryByCustomer = (id: string, inputCode: string): boolean => {
+    // Subscribe to Firestore updates
+    useEffect(() => {
+        const q = collection(db, 'deliveries');
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as ExtendedDelivery));
+            setDeliveries(data);
+        });
+
+        // Auto-seed if empty
+        seedDatabase();
+
+        return () => unsubscribe();
+    }, []);
+
+    const seedDatabase = async () => {
+        const q = query(collection(db, 'deliveries'));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+            console.log("Database already has data. Skipping seed.");
+            return;
+        }
+
+        console.log("Seeding database...");
+        const batch = writeBatch(db);
+
+        // Use MOCK_DELIVERIES as base, but generate fresh random data for 10-15 items
+        // We'll just loop mock data to create more items
+        const seedData = Array.from({ length: 15 }).map((_, i) => {
+            const mockTemplate = MOCK_DELIVERIES[i % MOCK_DELIVERIES.length];
+            // Ensure unique ID for Firestore
+            const docRef = doc(collection(db, 'deliveries'));
+
+            return {
+                ref: docRef,
+                data: {
+                    ...mockTemplate,
+                    id: docRef.id, // Use firestore auto-id or maintain separate ID field
+                    customerName: `${mockTemplate.customerName} ${i + 1}`, // Variate name
+                    courierCode: Math.floor(100000 + Math.random() * 900000).toString(),
+                    customerCode: Math.floor(100000 + Math.random() * 900000).toString(),
+                    photoDeliveryRequested: false,
+                    photoDeliveryApproved: false,
+                    status: 'pending' // Reset status
+                }
+            };
+        });
+
+        seedData.forEach(item => {
+            batch.set(item.ref, item.data);
+        });
+
+        await batch.commit();
+        console.log("Database seeded with 15 records!");
+    };
+
+    const verifyDeliveryByCustomer = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
         if (delivery && delivery.courierCode === inputCode) {
-            setDeliveries(prev => prev.map(d => d.id === id ? { ...d, status: 'delivered' } : d));
+            await updateDoc(doc(db, 'deliveries', id), { status: 'delivered' });
             return true;
         }
         return false;
     };
 
-    const verifyDeliveryByCourier = (id: string, inputCode: string): boolean => {
+    const verifyDeliveryByCourier = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
         if (delivery && delivery.customerCode === inputCode) {
-            setDeliveries(prev => prev.map(d => d.id === id ? { ...d, status: 'delivered' } : d));
+            await updateDoc(doc(db, 'deliveries', id), { status: 'delivered' });
             return true;
         }
         return false;
     };
 
-    const requestPhotoDelivery = (id: string) => {
-        setDeliveries(prev => prev.map(d => d.id === id ? { ...d, photoDeliveryRequested: true } : d));
+    const requestPhotoDelivery = async (id: string) => {
+        await updateDoc(doc(db, 'deliveries', id), { photoDeliveryRequested: true });
     };
 
-    const approvePhotoDelivery = (id: string) => {
-        setDeliveries(prev => prev.map(d => d.id === id ? {
-            ...d,
-            photoDeliveryApproved: true
-        } : d));
+    const approvePhotoDelivery = async (id: string) => {
+        await updateDoc(doc(db, 'deliveries', id), { photoDeliveryApproved: true });
     };
 
     return (
@@ -66,7 +116,8 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
             verifyDeliveryByCustomer,
             verifyDeliveryByCourier,
             requestPhotoDelivery,
-            approvePhotoDelivery
+            approvePhotoDelivery,
+            seedDatabase
         }}>
             {children}
         </DeliveryContext.Provider>
