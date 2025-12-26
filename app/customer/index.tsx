@@ -65,6 +65,8 @@ export default function CustomerHome() {
     };
 
     const handleInput = (text: string, index: number) => {
+        if (!/^\d*$/.test(text)) return;
+
         const newCode = [...code];
         newCode[index] = text;
         setCode(newCode);
@@ -215,7 +217,7 @@ const styles = StyleSheet.create({
     cardTitle: { fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
     cardSub: { fontSize: 12, color: Colors.textSub, textAlign: 'center', marginBottom: 20 },
     codeContainer: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
-    input: { width: 50, height: 56, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, fontSize: 20, fontWeight: 'bold', color: Colors.primary },
+    input: { width: 50, height: 56, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, fontSize: 20, fontWeight: 'bold', color: Colors.primary, textAlign: 'center' },
 
     yourCodeCard: { backgroundColor: Colors.primary, borderRadius: 16, overflow: 'hidden', ...Shadows.medium, marginTop: 24 },
     pattern: { position: 'absolute', inset: 0, opacity: 0.1, backgroundColor: 'black' },

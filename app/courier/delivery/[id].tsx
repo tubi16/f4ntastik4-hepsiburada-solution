@@ -307,10 +307,10 @@ const styles = StyleSheet.create({
     uploadBox: { padding: 20, backgroundColor: '#f5f5f5', alignItems: 'center', borderRadius: 12, borderStyle: 'dashed', borderWidth: 2, borderColor: '#ddd' },
     uploadTitle: { fontWeight: 'bold', color: Colors.primary },
 
-    yourCodeContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#eef2ff', padding: 16, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: '#c7d2fe' },
-    yourCodeLabel: { fontSize: 10, fontWeight: 'bold', color: '#4f46e5' },
-    yourCodeSub: { fontSize: 11, color: '#6366f1' },
-    yourCodeBadge: { backgroundColor: '#4f46e5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+    yourCodeContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff7ed', padding: 16, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: '#fdba74' },
+    yourCodeLabel: { fontSize: 10, fontWeight: 'bold', color: '#ea580c' },
+    yourCodeSub: { fontSize: 11, color: '#c2410c' },
+    yourCodeBadge: { backgroundColor: Colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
     yourCodeValue: { color: 'white', fontWeight: 'bold', fontSize: 18, letterSpacing: 2 },
 
     confirmButton: { backgroundColor: Colors.primary, padding: 18, borderRadius: 16, alignItems: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
