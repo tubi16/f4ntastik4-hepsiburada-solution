@@ -71,6 +71,13 @@ export default function CourierHome() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
+                    <Pressable
+                        style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        onPress={() => router.back()}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={Colors.textMain} />
+                    </Pressable>
                     <Ionicons name="cube-outline" size={28} color={Colors.brandPurple} />
                     <Text style={styles.headerTitle}>Kargolarım</Text>
                 </View>
@@ -149,7 +156,8 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.surfaceLight,
         // Height is determined by content + padding
     },
-    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    backButton: { marginRight: 4, padding: 4 },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.textMain },
     notificationButton: { padding: 8, backgroundColor: '#f0f0f0', borderRadius: 20 },
     notificationDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary, borderWidth: 1, borderColor: 'white' },

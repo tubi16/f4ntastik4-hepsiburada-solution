@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Pressable, TextInput, Alert, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useDelivery } from '../context/DeliveryContext';
 
 export default function CustomerHome() {
+    const router = useRouter();
     const { deliveries, verifyDeliveryByCustomer, approvePhotoDelivery } = useDelivery();
 
     // State to lock focus on the current delivery actively being handled
@@ -87,6 +89,7 @@ export default function CustomerHome() {
                 <Pressable
                     style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={() => router.back()}
                 >
                     <Ionicons name="arrow-back" size={24} color={Colors.textMain} />
                 </Pressable>
