@@ -88,7 +88,11 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
 
     const verifyDeliveryByCustomer = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
-        if (delivery && delivery.courierCode === inputCode) {
+        console.log(`[Customer Verify] ID: ${id}, Input: ${inputCode}, Stored: ${delivery?.courierCode}`);
+
+        // Compare as strings to be safe
+        if (delivery && String(delivery.courierCode) === inputCode) {
+            console.log("[Customer Verify] Success!");
             const updates: any = { isCustomerVerified: true };
             if (delivery.isCourierVerified) {
                 updates.status = 'delivered';
@@ -96,12 +100,17 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
             await updateDoc(doc(db, 'deliveries', id), updates);
             return true;
         }
+        console.log("[Customer Verify] Failed - Mismatch or Not Found");
         return false;
     };
 
     const verifyDeliveryByCourier = async (id: string, inputCode: string): Promise<boolean> => {
         const delivery = deliveries.find(d => d.id === id);
-        if (delivery && delivery.customerCode === inputCode) {
+        console.log(`[Courier Verify] ID: ${id}, Input: ${inputCode}, Stored: ${delivery?.customerCode}`);
+
+        // Compare as strings to be safe
+        if (delivery && String(delivery.customerCode) === inputCode) {
+            console.log("[Courier Verify] Success!");
             const updates: any = { isCourierVerified: true };
             if (delivery.isCustomerVerified) {
                 updates.status = 'delivered';
@@ -109,6 +118,7 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
             await updateDoc(doc(db, 'deliveries', id), updates);
             return true;
         }
+        console.log("[Courier Verify] Failed - Mismatch or Not Found");
         return false;
     };
 

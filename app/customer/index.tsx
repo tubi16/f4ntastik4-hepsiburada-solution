@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme';
@@ -45,11 +45,23 @@ export default function CustomerHome() {
     const handleAlert = async () => {
         const inputCode = code.join('');
         if (inputCode.length === 6) {
-            const success = await verifyDeliveryByCustomer(myDelivery.id, inputCode);
-            if (success) {
-                // Success handled by UI reactivity
-            } else {
-                Alert.alert("Hata", "Girdiğiniz kod hatalı. Lütfen kuryeden aldığınız kodu kontrol ediniz.");
+            try {
+                console.log("Calling verifyDeliveryByCustomer...");
+                const success = await verifyDeliveryByCustomer(myDelivery.id, inputCode);
+                console.log("Customer Verification result:", success);
+
+                if (success) {
+                    // Success handled by UI reactivity
+                } else {
+                    if (Platform.OS === 'web') {
+                        window.alert("Hata\nGirdiğiniz kod hatalı. Lütfen kuryeden aldığınız kodu kontrol ediniz.");
+                    } else {
+                        Alert.alert("Hata", "Girdiğiniz kod hatalı. Lütfen kuryeden aldığınız kodu kontrol ediniz.");
+                    }
+                }
+            } catch (error) {
+                console.error("Customer Verification Error:", error);
+                Alert.alert("Hata", "Doğrulama sırasında bir hata oluştu.");
             }
         } else {
             Alert.alert("Eksik Kod", "Lütfen 6 haneli kodu giriniz.");

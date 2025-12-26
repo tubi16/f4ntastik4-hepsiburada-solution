@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Alert, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, TextInput, Image, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDelivery } from '../../context/DeliveryContext';
@@ -81,33 +81,59 @@ export default function DeliveryDetail() {
         if (method === 'code') {
             const inputCode = code.join('');
             if (inputCode.length !== 6) {
-                Alert.alert("Hata", "Lütfen 6 haneli müşteri kodunu giriniz.");
+                if (Platform.OS === 'web') {
+                    window.alert("Hata\nLütfen 6 haneli müşteri kodunu giriniz.");
+                } else {
+                    Alert.alert("Hata", "Lütfen 6 haneli müşteri kodunu giriniz.");
+                }
                 return;
             }
 
-            // Call verification
-            const success = await verifyDeliveryByCourier(delivery.id, inputCode);
+            try {
+                // Call verification
+                console.log("Calling calling verifyDeliveryByCourier...");
+                const success = await verifyDeliveryByCourier(delivery.id, inputCode);
+                console.log("Verification result:", success);
 
-            if (success) {
-                // Check if FULLY delivered or just partial
-                if (isCustomerVerified) { // This might be stale, but context updates fast. 
-                    // Ideally we check the result of verify call or wait for context update.
-                    // For now, simple alert.
-                    Alert.alert("Teslimat Tamamlandı! 🚀", "Sipariş başarıyla teslim edildi.");
-                    router.back();
+                if (success) {
+                    // Check if FULLY delivered or just partial
+                    if (isCustomerVerified) {
+                        if (Platform.OS === 'web') {
+                            window.alert("Teslimat Tamamlandı! 🚀\nSipariş başarıyla teslim edildi.");
+                        } else {
+                            Alert.alert("Teslimat Tamamlandı! 🚀", "Sipariş başarıyla teslim edildi.");
+                        }
+                        router.back();
+                    } else {
+                        if (Platform.OS === 'web') {
+                            window.alert("Kod Onaylandı ✅\nSizin tarafınızdaki onay tamamlandı. Müşterinin de kodu girmesi bekleniyor.");
+                        } else {
+                            Alert.alert("Kod Onaylandı ✅", "Sizin tarafınızdaki onay tamamlandı. Müşterinin de kodu girmesi bekleniyor.");
+                        }
+                    }
                 } else {
-                    Alert.alert("Kod Onaylandı ✅", "Sizin tarafınızdaki onay tamamlandı. Müşterinin de kodu girmesi bekleniyor.");
+                    console.log("Showing failure alert");
+                    if (Platform.OS === 'web') {
+                        window.alert("Hata\nKod hatalı. Lütfen müşterinin kodunu kontrol ediniz.");
+                    } else {
+                        Alert.alert("Hata", "Kod hatalı. Lütfen müşterinin kodunu kontrol ediniz.");
+                    }
                 }
-            } else {
-                Alert.alert("Hata", "Kod hatalı. Lütfen müşterinin kodunu kontrol ediniz.");
+            } catch (error) {
+                console.error("Courier Verification Error:", error);
+                if (Platform.OS === 'web') {
+                    window.alert("Hata\nDoğrulama sırasında bir hata oluştu.");
+                } else {
+                    Alert.alert("Hata", "Doğrulama sırasında bir hata oluştu.");
+                }
             }
         } else {
-            // Photo flow remains similar for now, assumes successful photo analysis = 'verification' logic 
-            // BUT for this specific refactor, we are focusing on the CODE handshake.
-            // If photo is approved, we treat it as "part of the process". 
-            // For simplicity in this iteration, Photo acts as a tool, but Final Confirmation still needs the Code Handshake unless we change that logic too.
-            // User asked for "Both sides enter code". So we enforce Code Method for final step even if photo is taken.
-            Alert.alert("Bilgi", "Fotoğraf doğrulandı. Lütfen şimdi kod doğrulamasını yapınız.");
+            // Photo flow remains similar for now
+            if (Platform.OS === 'web') {
+                window.alert("Bilgi\nFotoğraf doğrulandı. Lütfen şimdi kod doğrulamasını yapınız.");
+            } else {
+                Alert.alert("Bilgi", "Fotoğraf doğrulandı. Lütfen şimdi kod doğrulamasını yapınız.");
+            }
             setMethod('code');
         }
     };
