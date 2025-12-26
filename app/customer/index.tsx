@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,16 +14,20 @@ export default function CustomerHome() {
 
     const inputs = useRef<Array<TextInput | null>>([]);
 
-    if (!myDelivery) return null;
+    if (!myDelivery) return <View style={styles.center}><Text>Aktif teslimat bulunamadı.</Text></View>;
 
-    const { photoDeliveryRequested, photoDeliveryApproved } = myDelivery;
+    const { photoDeliveryRequested, photoDeliveryApproved, isCourierVerified, isCustomerVerified, status } = myDelivery;
 
     const handleAlert = async () => {
         const inputCode = code.join('');
         if (inputCode.length === 6) {
             const success = await verifyDeliveryByCustomer(myDelivery.id, inputCode);
             if (success) {
-                Alert.alert("Başarılı", "Teslimat başarıyla onaylandı! 🎉");
+                if (isCourierVerified) {
+                    Alert.alert("Başarılı", "Teslimat başarıyla tamamlandı! 🎉");
+                } else {
+                    Alert.alert("Kod Onaylandı", "Kuryenin de sizin kodunuzu girmesi bekleniyor.");
+                }
                 setCode(['', '', '', '', '', '']);
             } else {
                 Alert.alert("Hata", "Girdiğiniz kod hatalı. Lütfen kuryeden aldığınız kodu kontrol ediniz.");
@@ -53,6 +57,9 @@ export default function CustomerHome() {
         }
     };
 
+    const isWaitingForCourier = isCustomerVerified && !isCourierVerified;
+    const isCompleted = status === 'delivered';
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -66,68 +73,94 @@ export default function CustomerHome() {
                 <View style={{ width: 40 }} />
             </View>
 
-            <View style={styles.content}>
+            <ScrollView contentContainerStyle={styles.content}>
 
-                {/* Approval Request Notification */}
-                {photoDeliveryRequested && !photoDeliveryApproved && (
-                    <View style={styles.approvalCard}>
-                        <View style={styles.approvalHeader}>
-                            <Ionicons name="notifications-circle" size={32} color={Colors.primary} />
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.approvalTitle}>Kurye İzin İstiyor</Text>
-                                <Text style={styles.approvalSub}>Kurye fotoğraflı teslimat yapmak istiyor.</Text>
+                {/* Status Card Logic */}
+                {isCompleted ? (
+                    <View style={styles.statusCardSuccess}>
+                        <Ionicons name="checkmark-circle" size={64} color="white" />
+                        <Text style={styles.statusTitle}>Teslimat Tamamlandı</Text>
+                        <Text style={styles.statusSub}>İşbirliğiniz için teşekkür ederiz.</Text>
+                    </View>
+                ) : isWaitingForCourier ? (
+                    <View style={styles.statusCardWait}>
+                        <Ionicons name="hourglass" size={64} color="#d97706" />
+                        <Text style={[styles.statusTitle, { color: '#d97706' }]}>Kurye Bekleniyor</Text>
+                        <Text style={[styles.statusSub, { color: '#b45309' }]}>Siz onayladınız. Kuryenin de kodu girmesi gerekiyor.</Text>
+                    </View>
+                ) : (
+                    <>
+                        {/* Approval Request Notification */}
+                        {photoDeliveryRequested && !photoDeliveryApproved && (
+                            <View style={styles.approvalCard}>
+                                <View style={styles.approvalHeader}>
+                                    <Ionicons name="notifications-circle" size={32} color={Colors.primary} />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.approvalTitle}>Kurye İzin İstiyor</Text>
+                                        <Text style={styles.approvalSub}>Kurye fotoğraflı teslimat yapmak istiyor.</Text>
+                                    </View>
+                                </View>
+                                <Pressable
+                                    style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.8 }]}
+                                    onPress={handleApprovePhoto}
+                                >
+                                    <Text style={styles.approveBtnText}>İzin Ver</Text>
+                                    <Ionicons name="arrow-forward" size={16} color="white" />
+                                </Pressable>
+                            </View>
+                        )}
+
+                        <View style={styles.iconContainer}>
+                            <View style={styles.iconCircle}>
+                                <Ionicons name="shield-checkmark" size={40} color={Colors.primary} />
+                            </View>
+                            <Text style={styles.title}>Güvenli Teslimat</Text>
+                            <Text style={styles.description}>Sipariş #{myDelivery.id} için kuryenin size verdiği kodu giriniz.</Text>
+                        </View>
+
+                        <View style={styles.inputCard}>
+                            <Text style={styles.cardTitle}>Kurye Kodunu Girin</Text>
+                            <Text style={styles.cardSub}>Kuryeden aldığınız 6 haneli doğrulama kodunu giriniz.</Text>
+                            <View style={styles.codeContainer}>
+                                {code.map((digit, index) => (
+                                    <TextInput
+                                        key={index}
+                                        ref={(ref) => { inputs.current[index] = ref; }}
+                                        style={styles.input}
+                                        keyboardType="numeric"
+                                        maxLength={1}
+                                        value={digit}
+                                        onChangeText={(text) => handleInput(text, index)}
+                                        textAlign="center"
+                                    />
+                                ))}
                             </View>
                         </View>
                         <Pressable
-                            style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.8 }]}
-                            onPress={handleApprovePhoto}
+                            style={({ pressed }) => [styles.confirmButton, pressed && { opacity: 0.9 }]}
+                            onPress={handleAlert}
                         >
-                            <Text style={styles.approveBtnText}>İzin Ver</Text>
-                            <Ionicons name="arrow-forward" size={16} color="white" />
+                            <Ionicons name="checkmark-circle" size={24} color="white" />
+                            <Text style={styles.confirmButtonText}>Teslimatı Onayla</Text>
                         </Pressable>
-                    </View>
+                    </>
                 )}
 
-                <View style={styles.iconContainer}>
-                    <View style={styles.iconCircle}>
-                        <Ionicons name="shield-checkmark" size={40} color={Colors.primary} />
-                    </View>
-                    <Text style={styles.title}>Güvenli Teslimat</Text>
-                    <Text style={styles.description}>Sipariş #{myDelivery.id} için karşılıklı doğrulama yapınız.</Text>
-                </View>
-
-                <View style={styles.inputCard}>
-                    <Text style={styles.cardTitle}>Kurye Kodunu Girin</Text>
-                    <Text style={styles.cardSub}>Kuryeden aldığınız 6 haneli doğrulama kodunu giriniz.</Text>
-                    <View style={styles.codeContainer}>
-                        {code.map((digit, index) => (
-                            <TextInput
-                                key={index}
-                                ref={(ref) => { inputs.current[index] = ref; }}
-                                style={styles.input}
-                                keyboardType="numeric"
-                                maxLength={1}
-                                value={digit}
-                                onChangeText={(text) => handleInput(text, index)}
-                                textAlign="center"
-                            />
-                        ))}
-                    </View>
-                </View>
-
-                <View style={styles.yourCodeCard}>
-                    <View style={styles.pattern} />
-                    <View style={styles.codeContent}>
-                        <View style={styles.codeHeader}>
-                            <Ionicons name="id-card-outline" size={20} color="rgba(255,255,255,0.9)" />
-                            <Text style={styles.codeLabel}>SİZİN KODUNUZ</Text>
-                        </View>
-                        <Text style={styles.bigCode}>{myDelivery.customerCode}</Text>
-                        <View style={styles.codeBadge}>
-                            <Text style={styles.codeBadgeText}>Bu kodu kuryeye söyleyiniz</Text>
+                {!isCompleted && (
+                    <View style={styles.yourCodeCard}>
+                        <View style={styles.pattern} />
+                        <View style={styles.codeContent}>
+                            <View style={styles.codeHeader}>
+                                <Ionicons name="id-card-outline" size={20} color="rgba(255,255,255,0.9)" />
+                                <Text style={styles.codeLabel}>SİZİN KODUNUZ</Text>
+                            </View>
+                            <Text style={styles.bigCode}>{myDelivery.customerCode}</Text>
+                            <View style={styles.codeBadge}>
+                                <Text style={styles.codeBadgeText}>Bu kodu kuryeye söyleyiniz</Text>
+                            </View>
                         </View>
                     </View>
-                </View>
+                )}
 
                 <Pressable
                     style={({ pressed }) => [styles.helpRow, pressed && { opacity: 0.7 }]}
@@ -135,28 +168,19 @@ export default function CustomerHome() {
                     <Ionicons name="help-circle-outline" size={18} color={Colors.textSub} />
                     <Text style={styles.helpText}>Kod görünmüyor mu? Yardım al.</Text>
                 </Pressable>
-            </View>
-
-            <View style={styles.footer}>
-                <Pressable
-                    style={({ pressed }) => [styles.confirmButton, pressed && { opacity: 0.9 }]}
-                    onPress={handleAlert}
-                >
-                    <Ionicons name="checkmark-circle" size={24} color="white" />
-                    <Text style={styles.confirmButtonText}>Teslimatı Onayla</Text>
-                </Pressable>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: 'white' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.textMain },
     backButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5' },
 
-    content: { flex: 1, padding: 24 },
+    content: { padding: 24, paddingBottom: 40 },
     iconContainer: { alignItems: 'center', marginBottom: 24 },
     iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255, 96, 0, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
     title: { fontSize: 22, fontWeight: 'bold', color: Colors.textMain, marginBottom: 8 },
@@ -168,7 +192,7 @@ const styles = StyleSheet.create({
     codeContainer: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
     input: { width: 50, height: 56, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, fontSize: 20, fontWeight: 'bold', color: Colors.primary },
 
-    yourCodeCard: { backgroundColor: Colors.primary, borderRadius: 16, overflow: 'hidden', ...Shadows.medium },
+    yourCodeCard: { backgroundColor: Colors.primary, borderRadius: 16, overflow: 'hidden', ...Shadows.medium, marginTop: 24 },
     pattern: { position: 'absolute', inset: 0, opacity: 0.1, backgroundColor: 'black' },
     codeContent: { padding: 24, alignItems: 'center' },
     codeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
@@ -189,5 +213,10 @@ const styles = StyleSheet.create({
     approvalTitle: { fontSize: 16, fontWeight: 'bold', color: Colors.textMain },
     approvalSub: { fontSize: 12, color: Colors.textSub, flexShrink: 1 },
     approveBtn: { backgroundColor: Colors.primary, flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start' },
-    approveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13 }
+    approveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
+
+    statusCardSuccess: { backgroundColor: '#4CAF50', padding: 32, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+    statusCardWait: { backgroundColor: '#fff7ed', padding: 32, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 2, borderColor: '#fdba74', borderStyle: 'dashed' },
+    statusTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', marginTop: 16, textAlign: 'center' },
+    statusSub: { color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 8 }
 });
