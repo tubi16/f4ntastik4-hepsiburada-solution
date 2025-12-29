@@ -19,7 +19,7 @@ export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid
         }
 
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 
 
