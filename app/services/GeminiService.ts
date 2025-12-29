@@ -11,9 +11,13 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid: boolean; reason: string }> {
     try {
-        if (!API_KEY || API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
-            console.warn("Gemini API Key is missing or invalid.");
-            return { valid: false, reason: "API Anahtarı eksik veya hatalı yapılandırılmış. (PLACEHOLDER tespit edildi)" };
+        if (API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
+            console.warn("Gemini API Key is still PLACEHOLDER.");
+            return { valid: false, reason: "Sistem Hatası: API Anahtarı değiştirilemedi (PLACEHOLDER)." };
+        }
+        if (!API_KEY) {
+            console.warn("Gemini API Key is empty.");
+            return { valid: false, reason: "Sistem Hatası: API Anahtarı boş (Environment Variable eksik)." };
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
