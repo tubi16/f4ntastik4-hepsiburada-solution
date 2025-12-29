@@ -34,4 +34,4 @@ EXPOSE 8080
 # Start Nginx
 # Start Nginx with Runtime Environment Variable Replacement
 # We search for the placeholder and replace it with the actual ENV var value provided by Cloud Run
-CMD ["/bin/sh", "-c", "grep -rl 'GEMINI_API_KEY_PLACEHOLDER' /usr/share/nginx/html | xargs sed -i \"s|GEMINI_API_KEY_PLACEHOLDER|${EXPO_PUBLIC_GEMINI_API_KEY}|g\" && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "echo 'Starting startup script...'; if [ -z \"$EXPO_PUBLIC_GEMINI_API_KEY\" ]; then echo 'WARNING: EXPO_PUBLIC_GEMINI_API_KEY is not set!'; else echo 'API Key is set (length: '${#EXPO_PUBLIC_GEMINI_API_KEY}'). Performing replacement...'; fi; find /usr/share/nginx/html -type f -exec sed -i \"s|GEMINI_API_KEY_PLACEHOLDER|${EXPO_PUBLIC_GEMINI_API_KEY}|g\" {} +; echo 'Replacement command finished.'; nginx -g 'daemon off;'"]
