@@ -18,7 +18,13 @@ export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid
             return { valid: false, reason: "API Anahtarı eksik. Lütfen geliştirici ile iletişime geçin." };
         }
 
+
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        if (API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
+            console.error("Gemini API Key is still the placeholder. Runtime replacement failed.");
+            return { valid: false, reason: "Sistem yapılandırma hatası: API anahtarı yüklenemedi." };
+        }
 
         const prompt = `
       You are a delivery verification assistant. 
@@ -63,7 +69,7 @@ export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid
         }
 
     } catch (error) {
-        console.error("Gemini Analysis Error:", error);
+        console.error("Gemini Analysis Error:", JSON.stringify(error, null, 2));
         return { valid: false, reason: "Analiz sırasında teknik bir hata oluştu." };
     }
 }
