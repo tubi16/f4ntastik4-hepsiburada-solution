@@ -44,7 +44,6 @@ Prerequisites:
       --platform managed \
       --region us-central1 \
       --allow-unauthenticated \
-      --port 8080 \
-      --set-env-vars EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here
+      --port 8080
     ```
-    *Note: The Dockerfile is configured to verify and inject the API key at runtime. You MUST set `EXPO_PUBLIC_GEMINI_API_KEY` in the Cloud Run environment variables for it to work.*
+    *Note: Since the API key is embedded at build time for the web client, you do not need to set it as a runtime environment variable for the container, but you MUST include it during the `docker build` step.*
