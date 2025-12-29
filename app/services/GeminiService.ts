@@ -11,13 +11,16 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid: boolean; reason: string }> {
     try {
-        if (API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
+        // Validation check: We split the string so sed DOES NOT find/replace it here.
+        // If sed worked, API_KEY is now the real key (AIza...), which is != "GEMINI_API_KEY_PLACEHOLDER".
+        // If sed failed, API_KEY is still "GEMINI_API_KEY_PLACEHOLDER", so they match.
+        if (API_KEY === "GEMINI_API_KEY_" + "PLACEHOLDER") {
             console.warn("Gemini API Key is still PLACEHOLDER.");
             return { valid: false, reason: "Sistem Hatası: API Anahtarı değiştirilemedi (PLACEHOLDER)." };
         }
         if (!API_KEY) {
             console.warn("Gemini API Key is empty.");
-            return { valid: false, reason: "Sistem Hatası: API Anahtarı boş (Environment Variable eksik)." };
+            return { valid: false, reason: "istem Hatası: API Anahtarı boş (Environment Variable eksik)." }; S
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
