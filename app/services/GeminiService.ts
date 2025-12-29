@@ -4,8 +4,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Access API Key from environment variables (Expo public env)
 // If EXPO_PUBLIC_GEMINI_API_KEY is missing at build time (common in Docker without args),
 // we fall back to a specific placeholder that we will replace at runtime via entrypoint.
-const ENV_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const API_KEY = (ENV_KEY && ENV_KEY.length > 0) ? ENV_KEY : "GEMINI_API_KEY_PLACEHOLDER";
+// Hardcoded per user request
+const API_KEY = "AIzaSyBwCq_Es3KB4O2m1kLnSkWvm8M0ZmKO_xM";
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -21,10 +21,7 @@ export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        if (API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
-            console.error("Gemini API Key is still the placeholder. Runtime replacement failed.");
-            return { valid: false, reason: "Sistem yapılandırma hatası: API anahtarı yüklenemedi." };
-        }
+
 
         const prompt = `
       You are a delivery verification assistant. 
