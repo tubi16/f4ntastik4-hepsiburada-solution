@@ -11,14 +11,12 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid: boolean; reason: string }> {
     try {
-        if (!API_KEY) {
-            console.warn("Gemini API Key is missing.");
-            // For prototype purposes, if no key is present, we might want to fail or mock success.
-            // Here we fail safely.
-            return { valid: false, reason: "API Anahtarı eksik. Lütfen geliştirici ile iletişime geçin." };
+        if (!API_KEY || API_KEY === "GEMINI_API_KEY_PLACEHOLDER") {
+            console.warn("Gemini API Key is missing or invalid.");
+            return { valid: false, reason: "API Anahtarı eksik veya hatalı yapılandırılmış. (PLACEHOLDER tespit edildi)" };
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         const prompt = `
       You are a delivery verification assistant. 
@@ -59,11 +57,15 @@ export async function analyzeDeliveryPhoto(base64Image: string): Promise<{ valid
             };
         } catch (e) {
             console.error("JSON Parse Error", e);
+            console.error("Raw Text:", text);
             return { valid: false, reason: "Yapay zeka yanıtı anlaşılamadı." };
         }
 
     } catch (error) {
-        console.error("Gemini Analysis Error:", error);
-        return { valid: false, reason: "Analiz sırasında teknik bir hata oluştu." };
+        console.error("Gemini Analysis Error Full Details:", JSON.stringify(error, null, 2));
+        if (error instanceof Error) {
+            console.error("Error Message:", error.message);
+        }
+        return { valid: false, reason: "Analiz sırasında teknik bir hata oluştu. Konsol loglarını kontrol edin." };
     }
 }
