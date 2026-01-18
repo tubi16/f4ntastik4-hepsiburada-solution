@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Teslimat Onayı</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "hb-orange": "#FF6000",
+                        "hb-orange-dark": "#E55600",
+                        "hb-purple": "#7D2DE2",
+                        "hb-purple-light": "#F3E5F5",
+                        "hb-purple-dark": "#4A148C",
+                        "background-light": "#FFFFFF",
+                        "surface-light": "#F8F8F8",
+                        "text-primary": "#2D2D2D",
+                        "text-secondary": "#6E6E6E",
+                    },
+                    fontFamily: {
+                        "display": ["Work Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light text-text-primary font-display min-h-screen flex flex-col antialiased">
+<div class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+<div class="flex items-center p-4 justify-between h-16">
+<button class="text-text-primary flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back_ios_new</span>
+</button>
+<h2 class="text-text-primary text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Teslimat Onayı</h2>
+</div>
+</div>
+<main class="flex-1 flex flex-col p-4 gap-6 pb-24 bg-white">
+<section class="bg-surface-light p-4 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-hb-orange">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-2 flex-1">
+<div class="flex items-center gap-2">
+<span class="bg-hb-orange/10 text-hb-orange text-xs font-bold px-2 py-1 rounded-full">Dağıtımda</span>
+<span class="text-text-secondary text-xs font-medium">Bugün, 14:30</span>
+</div>
+<h3 class="text-text-primary text-lg font-bold leading-tight">Ahmet Yılmaz</h3>
+<p class="text-text-secondary text-sm font-normal">Paket No: #HB-982130</p>
+<p class="text-text-secondary text-xs mt-1 truncate w-full max-w-[200px]">Atatürk Mah. Cumhuriyet Cad. No:12 D:4, Kadıköy</p>
+</div>
+<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-200 relative border border-gray-200">
+<div class="w-full h-full bg-cover bg-center" data-alt="Map showing delivery location in Kadikoy" data-location="Kadikoy, Istanbul" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDFTZ1zy6kmCZ-TuU7blmaweWMfQTcuNWxSAFa9PL3BDY3JqUm1CZjmmnvs8h4VYkh7Gz4dqY1-JDoKe9edmgCvCUs42L58f-jHiGucUUBVvPMl1ZGxJg0Ug1RHTowY7KIKm8alAj7DOF56YCRxnG3k7RsziM1gU2wbY3vgMyySQZ_b0u-DbU-CFJoTLlQWM5-Vcr7JzvAr3yn6a9Ktd9VyNvOnPlNB7v5q3AonjxPtQhP4D5ua9qz5K_b04i6E6p_4nLFSSMXIPCQ6");'></div>
+</div>
+</div>
+</section>
+<section>
+<h4 class="text-text-primary text-sm font-semibold mb-3 px-1">Teslimat Yöntemi</h4>
+<div class="flex p-1 bg-surface-light rounded-xl relative border border-gray-100">
+<input checked="" class="peer/code hidden" id="method-code" name="delivery-method" type="radio"/>
+<input class="peer/photo hidden" id="method-photo" name="delivery-method" type="radio"/>
+<div class="absolute inset-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-out peer-checked/photo:translate-x-full peer-checked/code:translate-x-0 border border-gray-100"></div>
+<label class="relative z-10 flex-1 flex items-center justify-center py-2.5 text-sm font-medium cursor-pointer transition-colors duration-200 text-text-secondary peer-checked/code:text-hb-orange" for="method-code">
+<span class="material-symbols-outlined mr-2 text-[20px]">pin</span>
+                    Kod ile
+                </label>
+<label class="relative z-10 flex-1 flex items-center justify-center py-2.5 text-sm font-medium cursor-pointer transition-colors duration-200 text-text-secondary peer-checked/photo:text-hb-orange" for="method-photo">
+<span class="material-symbols-outlined mr-2 text-[20px]">photo_camera</span>
+                    Fotoğraf ile
+                </label>
+</div>
+</section>
+<div class="flex flex-col gap-6">
+<section class="bg-surface-light p-6 rounded-xl border border-gray-100 flex flex-col items-center gap-4">
+<div class="text-center">
+<p class="text-hb-orange text-base font-semibold">Müşteri Kodunu Giriniz</p>
+<p class="text-text-secondary text-xs mt-1">Alıcıya SMS ile gönderilen 4 haneli kod</p>
+</div>
+<div class="flex gap-3 mt-2">
+<input class="w-12 h-14 bg-white border border-gray-200 border-b-2 border-b-gray-300 focus:border-b-hb-orange focus:border-hb-orange rounded-md text-center text-2xl font-bold text-text-primary outline-none transition-colors" maxlength="1" type="tel" value="4"/>
+<input class="w-12 h-14 bg-white border border-gray-200 border-b-2 border-b-hb-orange rounded-md text-center text-2xl font-bold text-text-primary outline-none animate-pulse shadow-[0_0_0_2px_rgba(255,96,0,0.1)]" maxlength="1" type="tel"/>
+<input class="w-12 h-14 bg-white border border-gray-200 border-b-2 border-b-gray-300 focus:border-b-hb-orange focus:border-hb-orange rounded-md text-center text-2xl font-bold text-text-primary outline-none transition-colors" maxlength="1" type="tel"/>
+<input class="w-12 h-14 bg-white border border-gray-200 border-b-2 border-b-gray-300 focus:border-b-hb-orange focus:border-hb-orange rounded-md text-center text-2xl font-bold text-text-primary outline-none transition-colors" maxlength="1" type="tel"/>
+</div>
+</section>
+<section class="bg-hb-orange/10 border border-hb-orange/20 p-5 rounded-xl flex items-center justify-between">
+<div>
+<p class="text-hb-orange text-sm font-bold uppercase tracking-wider">Sizin Kodunuz</p>
+<p class="text-hb-orange/80 text-xs mt-0.5">Müşteriye bu kodu söyleyiniz</p>
+</div>
+<div class="bg-hb-orange px-4 py-2 rounded-lg border border-hb-orange shadow-sm">
+<span class="text-2xl font-bold text-white tracking-widest">8291</span>
+</div>
+</section>
+</div>
+<div class="h-8"></div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
+<button class="w-full bg-hb-orange hover:bg-hb-orange-dark text-white font-bold h-14 rounded-xl shadow-lg shadow-hb-orange/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">check_circle</span>
+            Teslimatı Onayla
+        </button>
+<div class="h-6 w-full"></div>
+</div>
+</body></html>

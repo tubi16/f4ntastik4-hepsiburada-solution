@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # We can pass the placeholder during build if we want, or leave it empty to default to code's placeholder
+        EXPO_PUBLIC_GEMINI_API_KEY: "GEMINI_API_KEY_PLACEHOLDER"
+    ports:
+      - "8080:8080"
+    environment:
+      # This is the runtime key that will replace the placeholder
+      EXPO_PUBLIC_GEMINI_API_KEY: ${EXPO_PUBLIC_GEMINI_API_KEY}
+    # Mount the source for easier debugging if needed, but here we are testing the built image
